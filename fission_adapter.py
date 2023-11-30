@@ -1,6 +1,6 @@
 # Submit Functions
 import sys
-sys.path.append('../Function-Granularity-Tree/')
+sys.path.append('../granularity_tree_component/')
 from fgt import *
 
 def get_powerset(in_list):
