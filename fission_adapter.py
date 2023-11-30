@@ -19,24 +19,6 @@ def make_image_name(language:str = None, packages: frozenset = None) -> str:
     packages = list(packages)
     image_name = f"red2pac/{language}-" + "-".join(packages) + ":latest"
     return image_name
-    
-    # text = list(packages)
-    # text = [t for t in text if t != "Alpine"]
-    # text.sort()
-    # text = "-".join(text)
-    # name = f"red2pac/{language}-"
-    # name += (
-    #     str(text)
-    #     .replace("frozenset", "")
-    #     .replace("(", "")
-    #     .replace(")", "")
-    #     .replace("{", "")
-    #     .replace("}", "")
-    #     .replace("'", "")
-    #     .replace('"', "")
-    # )
-    # name += ":latest"
-    return name
 
 
 def submit(name: str, language: str, packages: frozenset,nodes: dict) -> dict:
