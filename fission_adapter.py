@@ -7,6 +7,7 @@ from fgt import *
 class Scheduler:
     def __init__(self) -> None:
         self.functions_data = dict()
+        self.functions_language_and_packages = dict()
         self.freqs = dict()
         self.fgt = TreeNode('Alpine')
         self.number_of_executions = 0
@@ -39,10 +40,23 @@ class Scheduler:
         packages = list(packages)
         image_name = f"red2pac/{language}-" + "-".join(packages) + ":latest"
         return image_name
+    
+    def submit_function_language_and_packages(self,name: str, language: str, packages: frozenset):
+        self.functions_language_and_packages[name] = (language, packages)
+        pass
+
+    def get_language(self,name:str):
+        return self.functions_language_and_packages[name][0]
+        pass
+    def get_packages(self,name:str):
+        return self.functions_language_and_packages[name][1]
+        pass
+
 
 
     def submit_function(self,name: str, language: str, packages: frozenset):
         self.update_frequency(packages)
+        self.submit_function_language_and_packages(name, language, packages)
 
         ps = self.get_powerset(packages)
         for p in ps:
@@ -103,7 +117,6 @@ class Scheduler:
 
     def end_submission(self,prune_teta:int):
         self.prune(prune_teta)
-        print(self.functions_data)
         self.fgt = make_tree(self.functions_data)
 
 if __name__ == "__main__":
@@ -111,5 +124,9 @@ if __name__ == "__main__":
     scheduler.submit_function("shadi", "python", frozenset({"a"}))
     scheduler.submit_function("shadi", "python", frozenset({"a", "b"}))
     scheduler.submit_function("shadi", "python", frozenset({"a", "b","c"}))
+    lang = scheduler.get_language('shadi')
+    print(lang)
+    pkgs =scheduler.get_packages('shadi')
+    print(pkgs)
     scheduler.end_submission(1)
-    scheduler.fgt.print_tree()
+    # scheduler.fgt.print_tree()
