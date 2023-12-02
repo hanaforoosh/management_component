@@ -9,6 +9,15 @@ class Scheduler:
         self.functions_data = dict()
         self.freqs = dict()
         self.fgt = TreeNode('Alpine')
+        self.number_of_executions = 0
+        self.reconfig_threshold = 100
+
+    def increase_execution_number(self):
+        self.number_of_executions += 1
+        if self.number_of_executions >= self.reconfig_threshold:
+            self.fgt.reconfig()
+            self.number_of_executions = 0
+
     def get_powerset(self,in_list):
         subsets = chain.from_iterable(
             combinations(in_list, r) for r in range(len(in_list) + 1)
