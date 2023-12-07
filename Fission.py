@@ -1,3 +1,4 @@
+from time import sleep
 from utils import run_shell_cmd
 class FissionClient:
 
@@ -53,20 +54,69 @@ class FissionClient:
         return function_name
         
 
-    def make_env(self,image_name,env_name = None):
+    def make_env(self,image_name,pool_size = 3, env_name = None):
         if env_name == None:
             env_name = image_name.split('/')[1].split(':')[0]
 
         cmd = f"docker pull {image_name}"
         run_shell_cmd(cmd)
-        cmd = f"fission environment create --name {env_name} --image {image_name}"
+        cmd = f"fission environment create --name {env_name} --image {image_name} --poolsize {pool_size}"
         run_shell_cmd(cmd)
         return env_name
     
     def test_fn(self,function_name):
         cmd = f"fission function test --name {function_name}"
-        run_shell_cmd(cmd)
+        res = run_shell_cmd(cmd,nowait = True)
 
+    def list_pods(self,function_name):
+        cmd = f"fission fn pods --name {function_name}"
+        res = run_shell_cmd(cmd)
+        output = res.stdout.split('\n')
+        names = [row.split(' ')[0] for row in output[1:] if row.split(' ')[0] != '']
+        return names
+    
+    def get_fn_logs(self, function_name, pod_name):
+        cmd = f"fission fn logs  --name {function_name} --pod {pod_name}"
+        res = run_shell_cmd(cmd)
+        output = res.stdout.split('\n')
+        output = [op for op in output if op !='']
+        return output
+    
+    def get_pod_state(self,function_name,pod_name):
+        logs = self.get_fn_logs(function_name,pod_name)
+        for entry in logs[::-1]:
+            try:
+                k,*_, = entry.split(':')
+                if k == 'finished':
+                    return 'warm'
+                elif k == 'started':
+                    return 'hot'
+            except:
+                continue
+        return None
+    
+    def get_from_fn_logs(self,function_name,pod_name,key):
+        logs = self.get_fn_logs(function_name,pod_name)
+        for entry in logs[::-1]:
+            try:
+                k,*v = entry.split(':')
+                if k == key:
+                    return ':'.join(v).strip()
+            except:
+                continue
+        return None
 if __name__ == '__main__':
     fission = FissionClient()
-    fission.clear_envs()
+    fission.list_envs()
+    fission.clear()
+    env = fission.make_env('red2pac/python-numpy',2,'python-numpy')
+    fn =fission.make_fn('pn.py',env)
+    for _ in range(3):
+        fission.test_fn('pn-python-numpy')
+    sleep(5)
+    pods = fission.list_pods('pn-python-numpy')
+    print("pods:", pods)
+    # sleep(10)
+    for pod in pods:
+        log = fission.get_pod_state('pn-python-numpy', pod)
+        print(log)
