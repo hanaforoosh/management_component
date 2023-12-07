@@ -1,7 +1,7 @@
 # Submit Functions
 import sys
 import subprocess
-sys.path.append("./granularity_tree_component/")
+sys.path.append("../granularity_tree_component/")
 from fgt import *
 
 class Scheduler:
@@ -27,8 +27,8 @@ class Scheduler:
         return powerset
 
     def run_shell_cmd(self,cmd: str):
-        # subprocess.run(cmd, shell=True)
-        pass
+        subprocess.run(cmd, shell=True)
+        # pass
         # print(cmd)
 
 
@@ -139,9 +139,9 @@ class Scheduler:
 
 if __name__ == "__main__":
     scheduler = Scheduler()
-    scheduler.submit_function("shadi1", "python", frozenset({"a"}))
-    scheduler.submit_function("shadi2", "python", frozenset({"a", "b"}))
-    scheduler.submit_function("shadi3", "python", frozenset({"a", "b","c"}))
+    scheduler.submit_function("shadi1", "python", frozenset({"numpy"}))
+    # scheduler.submit_function("shadi2", "python", frozenset({"django", "pytest"}))
+    # scheduler.submit_function("shadi3", "python", frozenset({"numpy", "fastapi","django"}))
     # lang = scheduler.get_language('shadi')
     # print(lang)
     # pkgs =scheduler.get_packages('shadi')
@@ -150,10 +150,10 @@ if __name__ == "__main__":
     scheduler.fgt.print_tree()
     scheduler.fgt.init(
         [
-            frozenset({"a"}),
-            frozenset({"a", "b"}),
-            frozenset({"Alpine"}),
+            frozenset({"numpy"}),
+            # frozenset({"a", "b"}),
+            # frozenset({"Alpine"}),
         ]
     )
     # print(scheduler.make_image_name(lang, pkgs))
-    scheduler.execute_tepid_function("shadi3")
+    scheduler.execute_tepid_function("shadi1")
