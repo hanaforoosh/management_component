@@ -1,7 +1,7 @@
 # Submit Functions
 import sys
-
-sys.path.append("../granularity_tree_component/")
+import subprocess
+sys.path.append("./granularity_tree_component/")
 from fgt import *
 
 class Scheduler:
@@ -27,6 +27,7 @@ class Scheduler:
         return powerset
 
     def run_shell_cmd(self,cmd: str):
+        # subprocess.run(cmd, shell=True)
         pass
         # print(cmd)
 
@@ -37,7 +38,7 @@ class Scheduler:
         elif packages in [None, frozenset({}), frozenset()]:
             return f"red2pac/{language}:latest"
 
-        packages = list(packages)
+        packages = sorted(list(packages))
         image_name = f"red2pac/{language}-" + "-".join(packages) + ":latest"
         return image_name
     
@@ -52,6 +53,10 @@ class Scheduler:
         return self.functions_language_and_packages[name][1]
         pass
 
+    def get_function_name(self, name: str, language: str, packages: frozenset) -> str:
+        sorted_packages = sorted(packages)
+        fn = f"{name}-{language}-{'-'.join(sorted_packages)}"
+        return fn
 
 
     def submit_function(self,name: str, language: str, packages: frozenset):
@@ -93,6 +98,7 @@ class Scheduler:
         cmd = f"fission environment create --name {env} --image {image_name}"
         self.run_shell_cmd(cmd)
         cmd = f"fission fn create --name {function_name}-{env} --env {env} --code {function_name}.py"
+        print("cmd:", cmd)
         self.run_shell_cmd(cmd)
 
     def prune(self,teta:int):
@@ -119,14 +125,35 @@ class Scheduler:
         self.prune(prune_teta)
         self.fgt = make_tree(self.functions_data)
 
+    def execute_tepid_function(self, name: str):
+        pkgs = self.get_packages(name)
+        lng = self.get_language(name)
+        tepids = self.fgt.get_nearest_tepid(lng, pkgs)
+        selected = tepids[0]
+        fission_fn_name = self.get_function_name(name,lng,selected.name)
+        self.fgt.run_on(pkgs,selected)
+        cmd = f"fission function test --name {fission_fn_name}"
+        response = self.run_shell_cmd(cmd)
+        print("pkgs:", pkgs, "lng:", lng, "fission_fn_name", fission_fn_name, "tepids:", tepids, "ss", selected, "\n CMD:", cmd)
+        self.increase_execution_number()
+
 if __name__ == "__main__":
     scheduler = Scheduler()
-    scheduler.submit_function("shadi", "python", frozenset({"a"}))
-    scheduler.submit_function("shadi", "python", frozenset({"a", "b"}))
-    scheduler.submit_function("shadi", "python", frozenset({"a", "b","c"}))
-    lang = scheduler.get_language('shadi')
-    print(lang)
-    pkgs =scheduler.get_packages('shadi')
-    print(pkgs)
+    scheduler.submit_function("shadi1", "python", frozenset({"a"}))
+    scheduler.submit_function("shadi2", "python", frozenset({"a", "b"}))
+    scheduler.submit_function("shadi3", "python", frozenset({"a", "b","c"}))
+    # lang = scheduler.get_language('shadi')
+    # print(lang)
+    # pkgs =scheduler.get_packages('shadi')
+    # print(pkgs)
     scheduler.end_submission(1)
-    # scheduler.fgt.print_tree()
+    scheduler.fgt.print_tree()
+    scheduler.fgt.init(
+        [
+            frozenset({"a"}),
+            frozenset({"a", "b"}),
+            frozenset({"Alpine"}),
+        ]
+    )
+    # print(scheduler.make_image_name(lang, pkgs))
+    scheduler.execute_tepid_function("shadi3")
