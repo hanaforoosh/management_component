@@ -163,29 +163,6 @@ class Scheduler:
         # No warm pod found; proceed with tepid function execution.
         self.execute_tepid_function(function_path)
 
-    # def execute_function(self, function_path: str):
-    #     execute = False
-    #     pkgs = self.get_packages(function_path)
-    #     lng = self.get_language(function_path)
-    #     power_set = self.get_powerset(pkgs)
-    #     for packege in power_set:
-    #         fission_fn_name = self.get_function_name(function_path,lng,packege)
-    #         print("packege:", packege, "fission_fn_name:", fission_fn_name)
-
-    #         pods = self.fission.list_pods(fission_fn_name)
-    #         for pod in pods:
-    #             log = self.fission.get_pod_state(fission_fn_name, pod)
-    #             print("log:", log)
-    #             if log == 'warm':
-    #                 self.fission.test_fn(fission_fn_name)
-    #                 execute = True 
-    #                 break;
-    #         if execute:
-    #             break
-    #     if ~execute:
-    #         self.execute_tepid_function(function_path)
-    #     return None
-
     def tepid_selection_strategy(self, tepids):
         selected = tepids[0]
         print(selected)
