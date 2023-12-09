@@ -52,8 +52,11 @@ class Scheduler:
 
     def get_function_name(self, function_path: str, language: str, packages: frozenset) -> str:
         function_name = function_path.split('.')[0]
-        sorted_packages = sorted(packages)
-        fn = f"{function_name}-{language}-{'-'.join(sorted_packages)}"
+        if packages:
+            sorted_packages = sorted(packages)
+            fn = f"{function_name}-{language}-{'-'.join(sorted_packages)}"
+        else:
+            fn = f"{function_name}-{language}"
         return fn
 
 
@@ -127,6 +130,29 @@ class Scheduler:
         self.fission.test_fn(fission_fn_name)
         self.increase_execution_number()
 
+    def execute_function(self, function_path: str):
+        execute = False
+        pkgs = self.get_packages(function_path)
+        lng = self.get_language(function_path)
+        power_set = self.get_powerset(pkgs)
+        for packege in power_set:
+            fission_fn_name = self.get_function_name(function_path,lng,packege)
+            print("packege:", packege, "fission_fn_name:", fission_fn_name)
+
+            pods = self.fission.list_pods(fission_fn_name)
+            for pod in pods:
+                log = self.fission.get_pod_state(fission_fn_name, pod)
+                print("log:", log)
+                if log == 'warm':
+                    self.fission.test_fn(fission_fn_name)
+                    execute = True 
+                    break;
+            if execute:
+                break
+        if ~execute:
+            self.execute_tepid_function(function_path)
+        return None
+
     def tepid_selection_strategy(self, tepids):
         selected = tepids[0]
         print(selected)
@@ -136,13 +162,14 @@ if __name__ == "__main__":
     scheduler = Scheduler()
     scheduler.fission.clear()
     scheduler.submit_function("pn.py", "python", frozenset({"numpy"}))
+    print(scheduler.get_packages("pn.py"))
     scheduler.submit_function("pnf.py", "python", frozenset({"fastapi", "numpy"}))
     scheduler.end_submission(1)
     scheduler.fgt.print_tree()
     scheduler.fgt.init(
         [
-            frozenset({"numpy","fastapi"}),
+            frozenset({"numpy"}),
         ]
     )
     scheduler.execute_tepid_function("pnf.py")
-    scheduler.execute_tepid_function("pn.py")
+    scheduler.execute_function("pn.py")
